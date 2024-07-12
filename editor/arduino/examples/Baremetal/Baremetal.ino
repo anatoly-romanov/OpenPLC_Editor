@@ -14,6 +14,8 @@
     #endif
 #endif
 
+#include <climits>
+
 uint32_t __tick = 0;
 
 unsigned long scan_cycle;
@@ -319,11 +321,15 @@ void loop()
     timer_us += scan_cycle; 
 
     //sleep until next scan cycle (run lower priority tasks if time permits)
-    while(timer_us > micros())
+    for (;;)
     {
+        unsigned long diff = timer_us - micros();
+        if (diff == 0 || diff > (unsigned long)LONG_MAX)
+            break;
+
         #ifdef MODBUS_ENABLED
             //Only run Modbus task again if we have at least 10ms gap until the next cycle
-            if (timer_us - micros() >= 10000)
+            if (diff >= 10000)
             {
                 modbusTask();
             }
